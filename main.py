@@ -3,7 +3,7 @@ from flask_pymongo import pymongo
 from flask import jsonify 
 from flask_jwt_extended import JWTManager, create_access_token,get_jwt_identity,jwt_required
 from bson import ObjectId
-
+import os
 app = Flask(__name__)
 app.config["MONGO_URI"] = os.environ.get("MONGO_URI")
 app.config["JWT_SECRET_KEY"] = "hbh84ytvn4u5hb56un"
