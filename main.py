@@ -5,7 +5,7 @@ from flask_jwt_extended import JWTManager, create_access_token,get_jwt_identity,
 from bson import ObjectId
 
 app = Flask(__name__)
-app.config["MONGO_URI"] = "mongodb+srv://ussain_munna:kzAkve4KARJmUTyr@cluster0.5el0g3u.mongodb.net/user_data?retryWrites=true&w=majority"
+app.config["MONGO_URI"] = os.environ.get("MONGO_URI")
 app.config["JWT_SECRET_KEY"] = "hbh84ytvn4u5hb56un"
 
 jwt = JWTManager(app)
