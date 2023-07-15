@@ -1,4 +1,4 @@
-from flask import Flask,request
+from flask import Flask,request,render_template
 from flask_pymongo import pymongo
 from flask import jsonify 
 from flask_jwt_extended import JWTManager, create_access_token,get_jwt_identity,jwt_required
@@ -136,6 +136,10 @@ def delete_template(template_id):
     result = collection.delete_one({"_id": ObjectId(template_id), "user_email": user_email})
     if result.deleted_count ==1:return jsonify({"message": "Template deleted successfully."})
     else:return jsonify({"message": "Template not found."}), 404
+
+@app.route('/')
+def index():
+    return render_template('index.html')
 
 if __name__ == "__main__":
     app.run(debug=False, host="0.0.0.0")
