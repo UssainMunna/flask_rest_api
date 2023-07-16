@@ -17,6 +17,11 @@ def connect_to_mongo():
     client = pymongo.MongoClient(app.config["MONGO_URI"])
     return client['user_data']
 
+
+@app.route('/')
+def index():
+    return render_template("index.html")
+
 #Register a new user
 @app.route("/register", methods=["POST"])
 def register():
@@ -137,9 +142,7 @@ def delete_template(template_id):
     if result.deleted_count ==1:return jsonify({"message": "Template deleted successfully."})
     else:return jsonify({"message": "Template not found."}), 404
 
-@app.route('/')
-def index():
-    return 'Hello, World!'
+
 
 if __name__ == "__main__":
     app.run(debug=False, host="0.0.0.0")
