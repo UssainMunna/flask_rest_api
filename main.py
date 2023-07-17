@@ -8,7 +8,7 @@ import os
 app = Flask(__name__)
 jwt = JWTManager(app)
 
-#Database URI and JWT secret key
+# #Database URI and JWT secret key
 app.config["MONGO_URI"] = os.environ.get("MONGO_URI")
 app.config["JWT_SECRET_KEY"] = os.environ.get("JWT_SECRET_KEY")
 
@@ -77,6 +77,10 @@ def insert_template():
     # Extract User mail using jwt identity
     user_email = get_jwt_identity()
     template_data = request.json
+    required_fields = ["template_name", "subject", "body"]
+    missing_fields = [field for field in required_fields if field not in template_data]
+    if missing_fields:
+        return jsonify({"error": f"Missing required fields: {', '.join(missing_fields)}"}), 400
     # Add the user's email to the template data
     template_data["user_email"] = user_email  
     result = collection.insert_one(template_data)
@@ -119,11 +123,15 @@ def get_one_templates(template_id):
 def update_template(template_id):
     db = connect_to_mongo()
     collection = db["templates"]
+    template_data = request.json
     # Extract User mail using jwt identity
     user_email = get_jwt_identity()
+    required_fields = ["template_name", "subject", "body"]
+    missing_fields = [field for field in required_fields if field not in template_data]
+    if missing_fields:
+        return jsonify({"error": f"Missing required fields: {', '.join(missing_fields)}"}), 400
     template = collection.find_one({"_id": ObjectId(template_id), "user_email": user_email})
     if template:
-        template_data = request.json
         #Update values using set attribute
         collection.update_one({"_id": ObjectId(template_id), "user_email": user_email},{"$set": template_data})
         return jsonify({"message": "Template updated successfully."})
