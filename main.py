@@ -1,3 +1,4 @@
+from passlib.hash import pbkdf2_sha256
 from flask import Flask,request,render_template
 from flask_pymongo import pymongo
 from flask import jsonify 
@@ -5,12 +6,14 @@ from flask_jwt_extended import JWTManager, create_access_token,get_jwt_identity,
 from bson import ObjectId
 import os
 
+
 app = Flask(__name__)
 jwt = JWTManager(app)
 
 # #Database URI and JWT secret key
 app.config["MONGO_URI"] = os.environ.get("MONGO_URI")
 app.config["JWT_SECRET_KEY"] = os.environ.get("JWT_SECRET_KEY")
+
 
 #connect to mongo atlas
 def connect_to_mongo():
@@ -35,18 +38,19 @@ def register():
     missing_fields = [field for field in required_fields if field not in user_data]
     if missing_fields:
         return jsonify({"error": f"Missing required fields: {', '.join(missing_fields)}"}), 400
-
     # Validate unique username/email
     existing_user = collection.find_one({"email": user_data["email"]})
     if existing_user:
         return jsonify({"error": "Email already exists."}), 400
-
+    #encrypt password 
+    password = user_data['password']
+    encrypted_password = pbkdf2_sha256.hash(password)
     # Insert new user
     new_user = {
         "first_name": user_data["first_name"],
         "last_name": user_data["last_name"],
         "email": user_data["email"],
-        "password": user_data["password"]
+        "password": encrypted_password
     }
     result = collection.insert_one(new_user)
     return jsonify({"message": "User registered successfully.", "user_id": str(result.inserted_id)})
@@ -64,10 +68,13 @@ def login():
     if missing_fields:return jsonify({"error": f"Username and Password are required: {', '.join(missing_fields)}"}), 400
     #Validate user exist
     existing_user = collection.find_one({"email": user_data["email"]})
-    if existing_user:
+
+    #verify hashed password
+    if existing_user and pbkdf2_sha256.verify(user_data['password'],existing_user['password']):
         access_token = create_access_token(identity=existing_user['email'])
         return jsonify({ "message" : "User loggedin","access_token": access_token}), 200
-    else:return jsonify({"error": "Invalid Credentials"}), 400
+    else:
+        return jsonify({"error": "Invalid Credentials"}), 400
 
 #create a template with jwt authorization
 @app.route("/template", methods=["POST"])
