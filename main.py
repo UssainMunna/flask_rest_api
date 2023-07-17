@@ -25,7 +25,8 @@ def index():
 #Register a new user
 @app.route("/register", methods=["POST"])
 def register():
-    user_data = request.json
+    try:user_data = request.json
+    except:return jsonify({"error": f"Missing payload"}), 400
     db = connect_to_mongo()
     collection = db["users"]
     
@@ -53,10 +54,10 @@ def register():
 #Login as a user
 @app.route("/login", methods=["POST"])
 def login():
-    user_data = request.json
+    try:user_data = request.json
+    except:return jsonify({"error": f"Missing payload"}), 400
     db = connect_to_mongo()
     collection = db["users"]
-    
     #Validate required fields
     required_fields = ["email", "password"]
     missing_fields = [field for field in required_fields if field not in user_data]
@@ -72,11 +73,12 @@ def login():
 @app.route("/template", methods=["POST"])
 @jwt_required()
 def insert_template():
+    try:template_data = request.json
+    except:return jsonify({"error": f"Missing payload"}), 400
     db = connect_to_mongo()
     collection = db["templates"]
     # Extract User mail using jwt identity
     user_email = get_jwt_identity()
-    template_data = request.json
     required_fields = ["template_name", "subject", "body"]
     missing_fields = [field for field in required_fields if field not in template_data]
     if missing_fields:
@@ -121,9 +123,10 @@ def get_one_templates(template_id):
 @app.route("/template/<template_id>", methods=["PUT"])
 @jwt_required()
 def update_template(template_id):
+    try:template_data = request.json
+    except:return jsonify({"error": f"Missing payload"}), 400
     db = connect_to_mongo()
     collection = db["templates"]
-    template_data = request.json
     # Extract User mail using jwt identity
     user_email = get_jwt_identity()
     required_fields = ["template_name", "subject", "body"]
@@ -137,7 +140,7 @@ def update_template(template_id):
         return jsonify({"message": "Template updated successfully."})
     else:return jsonify({"message": "Template not found."}), 404
     
-#Deleet template of specific user with jwt authorization
+#Delete template of specific user with jwt authorization
 @app.route("/template/<template_id>", methods=["DELETE"])
 @jwt_required()
 def delete_template(template_id):
